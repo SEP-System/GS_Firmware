@@ -1,4 +1,6 @@
 #include <Arduino.h>
+#include <WiFi.h>
+#include <PubSubClient.h>
 
 const int PINO_TRIG       = 5;
 const int PINO_ECHO       = 18;
@@ -30,8 +32,16 @@ const float VAZAO_MAX_LPM = 30.0;
 const int MAX_LEITURAS_INVALIDAS = 3;
 
 const unsigned long INTERVALO_LEITURA_MS   = 500;
+const unsigned long INTERVALO_ENVIO_MS     = 5000;
+const unsigned long INTERVALO_RECONEXAO_MS = 10000;
 
 const int TAMANHO_MEDIA = 5;
+
+const char* WIFI_SSID     = "Wokwi-GUEST";
+const char* WIFI_SENHA    = "";
+const char* MQTT_BROKER   = "broker.hivemq.com";
+const int   MQTT_PORTA    = 1883;
+const char* TOPICO_ATTRS  = "/TEF/caixa_g01/attrs";
 
 enum Estado {
   NORMAL,
@@ -52,6 +62,9 @@ const char* nomeEstado(Estado e) {
   return "?";
 }
 
+WiFiClient   clienteWifi;
+PubSubClient mqtt(clienteWifi);
+
 float bufferDistancia[TAMANHO_MEDIA];
 float bufferVazao[TAMANHO_MEDIA];
 int   posDistancia = 0, qtdDistancia = 0;
@@ -67,6 +80,8 @@ bool   caixaVaziaAtiva = false;
 unsigned long inicioVazaoMadrugada = 0;
 
 unsigned long ultimaLeitura   = 0;
+unsigned long ultimoEnvio     = 0;
+unsigned long ultimaReconexao = 0;
 
 bool buzzerLigado = false;
 
@@ -207,6 +222,49 @@ void atualizarAlertas(Estado e) {
   }
 }
 
+void iniciarWifi() {
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(WIFI_SSID, WIFI_SENHA);
+  mqtt.setServer(MQTT_BROKER, MQTT_PORTA);
+  mqtt.setSocketTimeout(2);
+}
+
+void manterConexao() {
+  if (mqtt.connected()) {
+    mqtt.loop();
+    return;
+  }
+  if (millis() - ultimaReconexao < INTERVALO_RECONEXAO_MS) return;
+  ultimaReconexao = millis();
+
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("[REDE] Sem Wi-Fi - operando apenas localmente");
+    return;
+  }
+
+  String idCliente = "caixa-" + String((uint32_t)ESP.getEfuseMac(), HEX);
+  if (mqtt.connect(idCliente.c_str())) {
+    Serial.println("[REDE] MQTT conectado");
+  } else {
+    Serial.print("[REDE] Falha no MQTT, código ");
+    Serial.println(mqtt.state());
+  }
+}
+
+void publicar() {
+  char mensagem[96];
+  snprintf(mensagem, sizeof(mensagem), "n|%.1f|v|%.1f|h|%d|s|%s",
+           nivelPct, vazaoLpm, hora, nomeEstado(estadoAtual));
+
+  if (mqtt.connected()) {
+    mqtt.publish(TOPICO_ATTRS, mensagem);
+    Serial.print("[MQTT] Enviado: ");
+  } else {
+    Serial.print("[MQTT] Offline, não enviado: ");
+  }
+  Serial.println(mensagem);
+}
+
 void imprimirStatus() {
   Serial.printf("[%02dh] Nivel: %5.1f%% | Vazao: %4.1f L/min | Estado: %s",
                 hora, nivelPct, vazaoLpm, nomeEstado(estadoAtual));
@@ -231,6 +289,7 @@ void setup() {
   pinMode(PINO_BUZZER, OUTPUT);
 
   Serial.println("=== SEP System - iniciando ===");
+  iniciarWifi();
 }
 
 void loop() {
@@ -245,9 +304,16 @@ void loop() {
       Serial.printf(">>> Mudanca de estado: %s -> %s\n",
                     nomeEstado(estadoAtual), nomeEstado(novoEstado));
       estadoAtual = novoEstado;
+      publicar();
     }
     imprimirStatus();
   }
 
   atualizarAlertas(estadoAtual);
+
+  manterConexao();
+  if (agora - ultimoEnvio >= INTERVALO_ENVIO_MS) {
+    ultimoEnvio = agora;
+    publicar();
+  }
 }
