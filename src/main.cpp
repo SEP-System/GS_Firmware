@@ -14,6 +14,17 @@ const float DIST_VAZIA_CM       = 120.0;
 const float DIST_MIN_VALIDA_CM  = 2.0;
 const float DIST_MAX_VALIDA_CM  = 150.0;
 
+const float NIVEL_VAZIA_PCT        = 10.0;
+const float NIVEL_SAI_VAZIA_PCT    = 15.0;
+
+const float VAZAO_ALTA_LPM         = 12.0;
+
+const float VAZAO_MIN_VAZAMENTO    = 0.5;
+const int   HORA_INICIO_MADRUGADA  = 0;
+const int   HORA_FIM_MADRUGADA     = 5;
+
+const unsigned long TEMPO_CONFIRMA_VAZAMENTO_MS = 5000;
+
 const float VAZAO_MAX_LPM = 30.0;
 
 const int MAX_LEITURAS_INVALIDAS = 3;
@@ -21,6 +32,25 @@ const int MAX_LEITURAS_INVALIDAS = 3;
 const unsigned long INTERVALO_LEITURA_MS   = 500;
 
 const int TAMANHO_MEDIA = 5;
+
+enum Estado {
+  NORMAL,
+  CONSUMO_ALTO,
+  POSSIVEL_VAZAMENTO,
+  CAIXA_VAZIA,
+  FALHA_SENSOR
+};
+
+const char* nomeEstado(Estado e) {
+  switch (e) {
+    case NORMAL:             return "NORMAL";
+    case CONSUMO_ALTO:       return "CONSUMO_ALTO";
+    case POSSIVEL_VAZAMENTO: return "POSSIVEL_VAZAMENTO";
+    case CAIXA_VAZIA:        return "CAIXA_VAZIA";
+    case FALHA_SENSOR:       return "FALHA_SENSOR";
+  }
+  return "?";
+}
 
 float bufferDistancia[TAMANHO_MEDIA];
 float bufferVazao[TAMANHO_MEDIA];
@@ -32,7 +62,13 @@ float vazaoLpm  = 0;
 int   hora      = 12;
 int   leiturasInvalidas = 0;
 
+Estado estadoAtual = NORMAL;
+bool   caixaVaziaAtiva = false;
+unsigned long inicioVazaoMadrugada = 0;
+
 unsigned long ultimaLeitura   = 0;
+
+bool buzzerLigado = false;
 
 float lerDistanciaCm() {
   digitalWrite(PINO_TRIG, LOW);
@@ -77,6 +113,10 @@ float distanciaParaNivel(float distancia) {
   return constrain(nivel, 0.0, 100.0);
 }
 
+bool ehMadrugada(int h) {
+  return h >= HORA_INICIO_MADRUGADA && h < HORA_FIM_MADRUGADA;
+}
+
 void atualizarLeituras() {
   float distancia = lerDistanciaCm();
 
@@ -92,11 +132,90 @@ void atualizarLeituras() {
   hora     = lerHora();
 }
 
+Estado decidirEstado() {
+  if (leiturasInvalidas >= MAX_LEITURAS_INVALIDAS) {
+    return FALHA_SENSOR;
+  }
+
+  if (nivelPct < NIVEL_VAZIA_PCT)          caixaVaziaAtiva = true;
+  else if (nivelPct > NIVEL_SAI_VAZIA_PCT) caixaVaziaAtiva = false;
+  if (caixaVaziaAtiva) return CAIXA_VAZIA;
+
+  if (ehMadrugada(hora) && vazaoLpm > VAZAO_MIN_VAZAMENTO) {
+    if (inicioVazaoMadrugada == 0) inicioVazaoMadrugada = millis();
+    if (millis() - inicioVazaoMadrugada >= TEMPO_CONFIRMA_VAZAMENTO_MS) {
+      return POSSIVEL_VAZAMENTO;
+    }
+  } else {
+    inicioVazaoMadrugada = 0;
+  }
+
+  if (vazaoLpm > VAZAO_ALTA_LPM) return CONSUMO_ALTO;
+
+  return NORMAL;
+}
+
+void definirCor(bool r, bool g, bool b) {
+  digitalWrite(PINO_LED_R, r);
+  digitalWrite(PINO_LED_G, g);
+  digitalWrite(PINO_LED_B, b);
+}
+
+void buzzer(bool ligar, int frequencia) {
+  if (ligar && !buzzerLigado) {
+    tone(PINO_BUZZER, frequencia);
+    buzzerLigado = true;
+  } else if (!ligar && buzzerLigado) {
+    noTone(PINO_BUZZER);
+    buzzerLigado = false;
+  }
+}
+
+void atualizarAlertas(Estado e) {
+  unsigned long agora = millis();
+
+  switch (e) {
+    case NORMAL:
+      definirCor(LOW, HIGH, LOW);
+      buzzer(false, 0);
+      break;
+
+    case CONSUMO_ALTO:
+      definirCor(HIGH, HIGH, LOW);
+      buzzer(agora % 4000 < 150, 1000);
+      break;
+
+    case POSSIVEL_VAZAMENTO: {
+      bool fase = (agora / 500) % 2 == 0;
+      definirCor(fase, LOW, LOW);
+      buzzer(fase, 1500);
+      break;
+    }
+
+    case CAIXA_VAZIA:
+      definirCor(HIGH, LOW, LOW);
+      buzzer(true, 800);
+      break;
+
+    case FALHA_SENSOR: {
+      bool fase = (agora / 1000) % 2 == 0;
+      definirCor(LOW, LOW, fase);
+      unsigned long t = agora % 5000;
+      buzzer(t < 100 || (t > 250 && t < 350), 2000);
+      break;
+    }
+  }
+}
+
 void imprimirStatus() {
-  Serial.printf("[%02dh] Nivel: %5.1f%% | Vazao: %4.1f L/min",
-                hora, nivelPct, vazaoLpm);
+  Serial.printf("[%02dh] Nivel: %5.1f%% | Vazao: %4.1f L/min | Estado: %s",
+                hora, nivelPct, vazaoLpm, nomeEstado(estadoAtual));
   if (leiturasInvalidas > 0) {
     Serial.printf(" | leituras invalidas seguidas: %d", leiturasInvalidas);
+  }
+  if (inicioVazaoMadrugada != 0 && estadoAtual != POSSIVEL_VAZAMENTO) {
+    Serial.printf(" | vazao na madrugada ha %lu s",
+                  (millis() - inicioVazaoMadrugada) / 1000);
   }
   Serial.println();
 }
@@ -120,6 +239,15 @@ void loop() {
   if (agora - ultimaLeitura >= INTERVALO_LEITURA_MS) {
     ultimaLeitura = agora;
     atualizarLeituras();
+
+    Estado novoEstado = decidirEstado();
+    if (novoEstado != estadoAtual) {
+      Serial.printf(">>> Mudanca de estado: %s -> %s\n",
+                    nomeEstado(estadoAtual), nomeEstado(novoEstado));
+      estadoAtual = novoEstado;
+    }
     imprimirStatus();
   }
+
+  atualizarAlertas(estadoAtual);
 }
