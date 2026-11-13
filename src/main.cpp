@@ -11,14 +11,26 @@ const int PINO_BUZZER     = 19;
 
 const float DIST_CHEIA_CM       = 20.0;
 const float DIST_VAZIA_CM       = 120.0;
+const float DIST_MIN_VALIDA_CM  = 2.0;
+const float DIST_MAX_VALIDA_CM  = 150.0;
 
 const float VAZAO_MAX_LPM = 30.0;
 
+const int MAX_LEITURAS_INVALIDAS = 3;
+
 const unsigned long INTERVALO_LEITURA_MS   = 500;
+
+const int TAMANHO_MEDIA = 5;
+
+float bufferDistancia[TAMANHO_MEDIA];
+float bufferVazao[TAMANHO_MEDIA];
+int   posDistancia = 0, qtdDistancia = 0;
+int   posVazao = 0,     qtdVazao = 0;
 
 float nivelPct  = 0;
 float vazaoLpm  = 0;
 int   hora      = 12;
+int   leiturasInvalidas = 0;
 
 unsigned long ultimaLeitura   = 0;
 
@@ -32,7 +44,12 @@ float lerDistanciaCm() {
   unsigned long duracao = pulseIn(PINO_ECHO, HIGH, 30000);
   if (duracao == 0) return -1;
 
-  return duracao * 0.0343 / 2.0;
+  float distancia = duracao * 0.0343 / 2.0;
+
+  if (distancia < DIST_MIN_VALIDA_CM || distancia > DIST_MAX_VALIDA_CM) {
+    return -1;
+  }
+  return distancia;
 }
 
 float lerVazaoLpm() {
@@ -45,6 +62,16 @@ int lerHora() {
   return constrain(map(bruto, 0, 4095, 0, 23), 0, 23);
 }
 
+float mediaMovel(float buffer[], int &pos, int &qtd, float novoValor) {
+  buffer[pos] = novoValor;
+  pos = (pos + 1) % TAMANHO_MEDIA;
+  if (qtd < TAMANHO_MEDIA) qtd++;
+
+  float soma = 0;
+  for (int i = 0; i < qtd; i++) soma += buffer[i];
+  return soma / qtd;
+}
+
 float distanciaParaNivel(float distancia) {
   float nivel = (DIST_VAZIA_CM - distancia) / (DIST_VAZIA_CM - DIST_CHEIA_CM) * 100.0;
   return constrain(nivel, 0.0, 100.0);
@@ -52,16 +79,26 @@ float distanciaParaNivel(float distancia) {
 
 void atualizarLeituras() {
   float distancia = lerDistanciaCm();
-  if (distancia >= 0) {
-    nivelPct = distanciaParaNivel(distancia);
+
+  if (distancia < 0) {
+    leiturasInvalidas++;
+  } else {
+    leiturasInvalidas = 0;
+    float distSuavizada = mediaMovel(bufferDistancia, posDistancia, qtdDistancia, distancia);
+    nivelPct = distanciaParaNivel(distSuavizada);
   }
-  vazaoLpm = lerVazaoLpm();
+
+  vazaoLpm = mediaMovel(bufferVazao, posVazao, qtdVazao, lerVazaoLpm());
   hora     = lerHora();
 }
 
 void imprimirStatus() {
-  Serial.printf("[%02dh] Nivel: %5.1f%% | Vazao: %4.1f L/min\n",
+  Serial.printf("[%02dh] Nivel: %5.1f%% | Vazao: %4.1f L/min",
                 hora, nivelPct, vazaoLpm);
+  if (leiturasInvalidas > 0) {
+    Serial.printf(" | leituras invalidas seguidas: %d", leiturasInvalidas);
+  }
+  Serial.println();
 }
 
 void setup() {
