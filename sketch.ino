@@ -1,11 +1,6 @@
 /*
  *  SEP System  -  FIAP Global Solution 2026.2 (CitizenTech)
  *  Edge Computing & Computer Systems
- *  Integrantes:
- *    - GIANLUCA ANTONICCI - RM 570081
- *    - ENZO VIEIRA PROVENZANO - RM 569696
- *    - JOÃO VITOR RODRIGUES COSTA - RM 569510
- *    - MATHEUS MARCONDES ARAÚJO - RM 573152
  *
  *  O que o dispositivo faz:
  *    MEDIR   -> nível da caixa (HC-SR04) e vazão de saída (potenciômetro que
