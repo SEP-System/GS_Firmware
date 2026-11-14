@@ -34,7 +34,7 @@ Projeto da Global Solution 2026.2 (CitizenTech) da FIAP, disciplina de Edge Comp
 | Campo | Resposta |
 |---|---|
 | Nome da CitizenTech | SEP System |
-| Cidade e bairro | São Paulo, Bela-vista |
+| Cidade e bairro | São Paulo, Bela Vista |
 | Cidadão beneficiado | Moradores de casas e condomínios e o síndico responsável pela conta de água |
 | Problema, em uma frase | Vazamentos e falta de água só são percebidos quando a conta chega ou a torneira seca. |
 | Como funciona | Sensores na caixa medem nível e vazão; o ESP32 classifica a situação, alerta no local e envia os dados ao FIWARE. |
@@ -223,7 +223,6 @@ No circuito físico, o pino ECHO do HC-SR04 trabalha em 5 V e o ESP32 em 3,3 V. 
 ```
 .
 ├── sketch.ino          Firmware do ESP32
-├── diagram.json        Circuito do Wokwi
 ├── libraries.txt       Bibliotecas usadas pelo Wokwi
 ├── README.md           Este arquivo
 ├── SEP_System_FIWARE.postman_collection.json
@@ -366,18 +365,17 @@ Em seguida, a requisição **3. Consultas no Orion > Entidade completa** deve mo
 
 ### Parte 3: firmware no Wokwi
 
-1. Acesse [wokwi.com/projects/new/esp32](https://wokwi.com/projects/new/esp32).
-2. Na aba `sketch.ino`, apague o conteúdo e cole o arquivo `sketch.ino` deste repositório.
-3. Na aba `diagram.json`, apague o conteúdo e cole o arquivo `diagram.json`.
-4. Crie o arquivo `libraries.txt` (seta ao lado das abas, opção **New file**) e cole o conteúdo do arquivo `libraries.txt`.
-5. No `sketch.ino`, troque o endereço do broker pelo Elastic IP da VM:
+1. Abra o projeto no Wokwi: https://wokwi.com/projects/480586487979827201
+   O circuito, o firmware e as bibliotecas já estão montados.
+2. Se o FIWARE estiver em outra VM, troque no `sketch.ino` o endereço do broker pelo Elastic IP dessa VM:
 
 ```cpp
-const char* MQTT_BROKER = "IP_PUBLICO_DA_VM";
+const char* MQTT_BROKER = "ELASTIC_IP";
 ```
 
-6. Clique em **Play**.
+3. Clique em **Play**. O Serial Monitor deve mostrar `[REDE] MQTT conectado` e, a cada 5 s, `[MQTT] Enviado: ...`.
 
+Para montar o projeto do zero em um novo projeto ESP32 no Wokwi, use o circuito do link acima como referência (as ligações estão em [Ligações](#ligações)), cole o `sketch.ino` deste repositório e crie o arquivo `libraries.txt` com o conteúdo do arquivo de mesmo nome.
 
 ---
 
@@ -464,7 +462,7 @@ Todos os parâmetros ficam como constantes no início do `sketch.ino`:
 | `MAX_LEITURAS_INVALIDAS` | 3 | Leituras inválidas seguidas até indicar falha |
 | `INTERVALO_LEITURA_MS` | 500 | Intervalo entre leituras |
 | `INTERVALO_ENVIO_MS` | 5000 | Intervalo entre envios MQTT |
-| `MQTT_BROKER` | `IP_PUBLICO_DA_VM` | Endereço do Mosquitto na AWS |
+| `MQTT_BROKER` | Elastic IP da VM | Endereço do Mosquitto na AWS |
 | `TOPICO_ATTRS` | `/TEF/caixa_g01/attrs` | Tópico MQTT; o `device_id` deve ser igual ao provisionado |
 
 Para adaptar a outra caixa d'água, basta medir a distância do sensor até a água com a caixa cheia e até o fundo, e ajustar `DIST_CHEIA_CM` e `DIST_VAZIA_CM`.
@@ -491,10 +489,10 @@ Para adaptar a outra caixa d'água, basta medir a distância do sensor até a á
 
 | Nome | RM |
 |---|---|
-| `Gianluca Antonicci` | `RM570081` |
-| `Enzo Vieira Provenzano` | `RM569696` |
-| `João Vitor Rodrigues Costa` | `RM569510` |
-| `Matheus Marcondes Araújo` | `RM573152` |
+| Gianluca Antonicci | RM570081 |
+| Enzo Vieira Provenzano | RM569696 |
+| João Vitor Rodrigues Costa | RM569510 |
+| Matheus Marcondes Araújo | RM573152 |
 
 ---
 
@@ -502,5 +500,5 @@ Para adaptar a outra caixa d'água, basta medir a distância do sensor até a á
 
 - Back-end: [FIWARE Descomplicado](https://github.com/fabiocabrini/fiware), do Prof. Fábio Henrique Cabrini (licença MIT).
 - Plataforma: [FIWARE Foundation](https://www.fiware.org/).
-- Simulação: [Wokwi](https://wokwi.com).
+- Simulação: [Wokwi](https://wokwi.com/projects/480586487979827201).
 - Biblioteca MQTT: [PubSubClient](https://github.com/knolleary/pubsubclient), de Nick O'Leary.

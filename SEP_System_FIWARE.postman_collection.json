@@ -2,12 +2,12 @@
   "info": {
     "name": "SEP System - FIWARE",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "Coleção do SEP System (GS 2026.2). Defina a variável url com o IP do Raspberry Pi."
+    "description": "Coleção do SEP System (GS 2026.2). Defina a variável url com o Elastic IP da VM na AWS."
   },
   "variable": [
     {
       "key": "url",
-      "value": "IP_DO_PI"
+      "value": "ELASTIC_IP"
     }
   ],
   "item": [
