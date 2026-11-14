@@ -6,7 +6,7 @@ Projeto da Global Solution 2026.2 (CitizenTech) da FIAP, disciplina de Edge Comp
 
 | Recurso | Link |
 |---|---|
-| Simulação no Wokwi | `LINK_DO_WOKWI` |
+| Simulação no Wokwi | https://wokwi.com/projects/480586487979827201 |
 | Vídeo de apresentação | `LINK_DO_YOUTUBE` |
 | Back-end FIWARE | [FIWARE Descomplicado](https://github.com/fabiocabrini/fiware) na AWS |
 
