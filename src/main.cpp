@@ -30,7 +30,6 @@
  *    - Potenciômetro "HORA": simula o relógio de 0h a 23h.
  */
 
-#include <Arduino.h>
 #include <WiFi.h>
 #include <PubSubClient.h>
 
@@ -102,11 +101,10 @@ const int TAMANHO_MEDIA = 5;
 // ---------------------------------------------------------------------------
 const char* WIFI_SSID     = "Wokwi-GUEST";        // rede aberta do Wokwi
 const char* WIFI_SENHA    = "";
-const char* MQTT_BROKER   = "broker.hivemq.com";  // trocar pelo IP do FIWARE, se for público
+const char* MQTT_BROKER   = "54.236.175.117";   // Elastic IP da VM na AWS (Mosquitto do FIWARE)
 const int   MQTT_PORTA    = 1883;
-// Troquem "caixa_g01" por um ID único do grupo: o broker público é
-// compartilhado com o mundo todo. O mesmo ID deve ser usado no
-// provisionamento do dispositivo no IoT Agent (Postman).
+// Tópico no formato /<apikey>/<device_id>/attrs. O device_id "caixa_g01"
+// deve ser o mesmo usado no provisionamento do dispositivo no IoT Agent (Postman).
 const char* TOPICO_ATTRS  = "/TEF/caixa_g01/attrs";
 
 // ===========================================================================
