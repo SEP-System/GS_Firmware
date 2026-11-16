@@ -7,6 +7,7 @@ Projeto da Global Solution 2026.2 (CitizenTech) da FIAP, disciplina de Edge Comp
 | Recurso | Link |
 |---|---|
 | Simulação no Wokwi | https://wokwi.com/projects/480586487979827201 |
+| Painel web (dados do firmware) | https://sepsystem.vercel.app |
 | Vídeo de apresentação | `LINK_DO_YOUTUBE` |
 | Back-end FIWARE | [FIWARE Descomplicado](https://github.com/fabiocabrini/fiware) na AWS |
 
@@ -430,7 +431,9 @@ Mensagens de rede:
 
 ### Consultando os dados
 
-Com a simulação rodando, use a coleção do Postman:
+Com a simulação rodando, os dados enviados pelo firmware podem ser acompanhados no painel web: https://sepsystem.vercel.app
+
+Para consultar direto no FIWARE, use a coleção do Postman:
 
 | Requisição | O que retorna |
 |---|---|
