@@ -1,0 +1,613 @@
+{
+  "info": {
+    "name": "SEP System - FIWARE",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Coleção do SEP System (GS 2026.2). Defina a variável url com o Elastic IP da VM na AWS."
+  },
+  "variable": [
+    {
+      "key": "url",
+      "value": "ELASTIC_IP"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Health checks",
+      "item": [
+        {
+          "name": "Orion - versão",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://{{url}}:1026/version",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "version"
+              ]
+            }
+          }
+        },
+        {
+          "name": "IoT Agent - about",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://{{url}}:4041/iot/about",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "4041",
+              "path": [
+                "iot",
+                "about"
+              ]
+            }
+          }
+        },
+        {
+          "name": "STH-Comet - versão",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://{{url}}:8666/version",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "8666",
+              "path": [
+                "version"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Provisionamento",
+      "item": [
+        {
+          "name": "Criar service group (apikey TEF)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:4041/iot/services",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "4041",
+              "path": [
+                "iot",
+                "services"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"services\": [\n    {\n      \"apikey\": \"TEF\",\n      \"cbroker\": \"http://orion:1026\",\n      \"entity_type\": \"CaixaDagua\",\n      \"resource\": \"\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Listar service groups",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:4041/iot/services",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "4041",
+              "path": [
+                "iot",
+                "services"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Provisionar caixa_g01",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:4041/iot/devices",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "4041",
+              "path": [
+                "iot",
+                "devices"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"devices\": [\n    {\n      \"device_id\": \"caixa_g01\",\n      \"entity_name\": \"urn:ngsi-ld:CaixaDagua:001\",\n      \"entity_type\": \"CaixaDagua\",\n      \"protocol\": \"PDI-IoTA-UltraLight\",\n      \"transport\": \"MQTT\",\n      \"attributes\": [\n        {\n          \"object_id\": \"n\",\n          \"name\": \"nivel\",\n          \"type\": \"Number\"\n        },\n        {\n          \"object_id\": \"v\",\n          \"name\": \"vazao\",\n          \"type\": \"Number\"\n        },\n        {\n          \"object_id\": \"h\",\n          \"name\": \"hora\",\n          \"type\": \"Integer\"\n        },\n        {\n          \"object_id\": \"s\",\n          \"name\": \"estado\",\n          \"type\": \"Text\"\n        }\n      ]\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Listar dispositivos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:4041/iot/devices",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "4041",
+              "path": [
+                "iot",
+                "devices"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Consultas no Orion",
+      "item": [
+        {
+          "name": "Entidade completa",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:1026/v2/entities/urn:ngsi-ld:CaixaDagua:001",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "entities",
+                "urn:ngsi-ld:CaixaDagua:001"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Só o estado",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:1026/v2/entities/urn:ngsi-ld:CaixaDagua:001/attrs/estado",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "entities",
+                "urn:ngsi-ld:CaixaDagua:001",
+                "attrs",
+                "estado"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Só o nível",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:1026/v2/entities/urn:ngsi-ld:CaixaDagua:001/attrs/nivel",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "entities",
+                "urn:ngsi-ld:CaixaDagua:001",
+                "attrs",
+                "nivel"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Histórico (STH-Comet)",
+      "item": [
+        {
+          "name": "Criar subscription para o STH",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:1026/v2/subscriptions",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "subscriptions"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Historico do SEP System\",\n  \"subject\": {\n    \"entities\": [\n      {\n        \"id\": \"urn:ngsi-ld:CaixaDagua:001\",\n        \"type\": \"CaixaDagua\"\n      }\n    ],\n    \"condition\": {\n      \"attrs\": [\n        \"nivel\",\n        \"vazao\",\n        \"estado\"\n      ]\n    }\n  },\n  \"notification\": {\n    \"http\": {\n      \"url\": \"http://fiware-sth-comet:8666/notify\"\n    },\n    \"attrs\": [\n      \"nivel\",\n      \"vazao\",\n      \"hora\",\n      \"estado\"\n    ],\n    \"attrsFormat\": \"legacy\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Listar subscriptions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:1026/v2/subscriptions",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "subscriptions"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Últimos 30 - nível",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:8666/STH/v1/contextEntities/type/CaixaDagua/id/urn:ngsi-ld:CaixaDagua:001/attributes/nivel?lastN=30",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "8666",
+              "path": [
+                "STH",
+                "v1",
+                "contextEntities",
+                "type",
+                "CaixaDagua",
+                "id",
+                "urn:ngsi-ld:CaixaDagua:001",
+                "attributes",
+                "nivel"
+              ],
+              "query": [
+                {
+                  "key": "lastN",
+                  "value": "30"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Últimos 30 - vazão",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:8666/STH/v1/contextEntities/type/CaixaDagua/id/urn:ngsi-ld:CaixaDagua:001/attributes/vazao?lastN=30",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "8666",
+              "path": [
+                "STH",
+                "v1",
+                "contextEntities",
+                "type",
+                "CaixaDagua",
+                "id",
+                "urn:ngsi-ld:CaixaDagua:001",
+                "attributes",
+                "vazao"
+              ],
+              "query": [
+                {
+                  "key": "lastN",
+                  "value": "30"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Últimos 30 - estado",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:8666/STH/v1/contextEntities/type/CaixaDagua/id/urn:ngsi-ld:CaixaDagua:001/attributes/estado?lastN=30",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "8666",
+              "path": [
+                "STH",
+                "v1",
+                "contextEntities",
+                "type",
+                "CaixaDagua",
+                "id",
+                "urn:ngsi-ld:CaixaDagua:001",
+                "attributes",
+                "estado"
+              ],
+              "query": [
+                {
+                  "key": "lastN",
+                  "value": "30"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Limpeza",
+      "item": [
+        {
+          "name": "Apagar dispositivo no IoT Agent",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:4041/iot/devices/caixa_g01",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "4041",
+              "path": [
+                "iot",
+                "devices",
+                "caixa_g01"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Apagar entidade no Orion",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:1026/v2/entities/urn:ngsi-ld:CaixaDagua:001",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "entities",
+                "urn:ngsi-ld:CaixaDagua:001"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Apagar service group",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:4041/iot/services/?resource=&apikey=TEF",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "4041",
+              "path": [
+                "iot",
+                "services",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "resource",
+                  "value": ""
+                },
+                {
+                  "key": "apikey",
+                  "value": "TEF"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
